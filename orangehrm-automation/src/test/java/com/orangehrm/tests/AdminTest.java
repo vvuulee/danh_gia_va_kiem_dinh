@@ -78,11 +78,9 @@ public class AdminTest extends BaseTest {
         logStep("Tìm kiếm username không tồn tại");
         adminPage.searchByUsername("NONEXISTENT_USER_XYZ_" + System.currentTimeMillis());
 
-        logStep("Xác nhận không có kết quả");
-        boolean noResults = adminPage.getUserCountAfterSearch() == 0
-            || adminPage.isNoRecordFound();
-        Assert.assertTrue(noResults,
-            "Hệ thống hiển thị kết quả khi username không tồn tại");
+        logStep("Xác nhận không có kết quả (0 rows)");
+        Assert.assertTrue(adminPage.isNoRecordFound(),
+            "Hệ thống phải không trả về kết quả khi username không tồn tại");
 
         logPass("TC_ADMIN_004 PASSED: Tìm kiếm đúng khi không có kết quả");
     }
@@ -94,11 +92,11 @@ public class AdminTest extends BaseTest {
     public void tc_Admin_005_resetAdminSearchFilter() {
         logStep("Tìm kiếm 'Admin' để lọc danh sách");
         adminPage.searchByUsername("Admin");
-        int filteredCount = adminPage.getUserCount();
+        int filteredCount = adminPage.getUserCountAfterSearch();
 
         logStep("Reset bộ lọc");
         adminPage.clickReset();
-        int afterResetCount = adminPage.getUserCount();
+        int afterResetCount = adminPage.getUserCountAfterSearch();
 
         logStep("Xác nhận sau reset hiển thị nhiều hơn hoặc bằng khi đang lọc");
         Assert.assertTrue(afterResetCount >= filteredCount,

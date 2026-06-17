@@ -112,7 +112,17 @@ public class DashboardPage extends BasePage {
     }
 
     public boolean isMenuItemPresent(String menuName) {
-        return menuItems.stream()
-            .anyMatch(item -> item.getText().equalsIgnoreCase(menuName));
+        try {
+            // Wait for first menu item to be visible before checking
+            if (!menuItems.isEmpty()) {
+                waitForVisible(menuItems.get(0));
+            }
+            logger.debug("🔍 Kiểm tra menu: {}", menuName);
+            return menuItems.stream()
+                .anyMatch(item -> item.getText().equalsIgnoreCase(menuName));
+        } catch (Exception e) {
+            logger.warn("⚠️ Không tìm thấy menu: {} - {}", menuName, e.getClass().getSimpleName());
+            return false;
+        }
     }
 }

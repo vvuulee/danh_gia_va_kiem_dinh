@@ -30,30 +30,47 @@ public class AdminPage extends BasePage {
         type(searchUsernameField, username);
         click(searchButton);
         waitForLoadingSpinner();
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+        try {
+            Thread.sleep(8000); // Vue.js lazy render cần thêm thời gian
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         logger.info("🔍 Tìm kiếm user: {}", username);
         return this;
     }
 
     public AdminPage clickReset() {
-        click(resetButton);
-        waitForLoadingSpinner();
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-        return this;
+    click(resetButton);
+    waitForLoadingSpinner();
+    try {
+        Thread.sleep(4000);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
     }
+    return this;
+}
 
     public int getUserCount() {
-        // Dùng findElements trực tiếp để tránh stale reference
+        // Đợi table body render xong, sau đó đếm rows
+        try {
+            waitForPresence(By.cssSelector(".oxd-table-body"));
+            Thread.sleep(2000); // Thêm 2s để đảm bảo lazy render
+        } catch (Exception e) {
+            logger.debug("Table body not present, returning 0");
+        }
         return driver.findElements(
             By.cssSelector(".oxd-table-body .oxd-table-row")
         ).size();
     }
 
     public int getUserCountAfterSearch() {
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-        return driver.findElements(
-            By.cssSelector(".oxd-table-body .oxd-table-row")
-        ).size();
+        // Thêm 8s sleep để đảm bảo Vue.js lazy render xong
+        try {
+            Thread.sleep(8000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return getUserCount();
     }
 
     public boolean isUserPresent(String username) {
@@ -62,26 +79,11 @@ public class AdminPage extends BasePage {
     }
 
     public boolean isNoRecordFound() {
-        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
-        try {
-            // Check cho text "No Records Found"
-            By noRecordXpath = By.xpath("//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'no records found')]");
-            if (!driver.findElements(noRecordXpath).isEmpty()) {
-                return true;
-            }
-            
-            // Check trong page source
-            String pageSource = driver.getPageSource();
-            if (pageSource.contains("No Records Found") || pageSource.contains("no records found")) {
-                return true;
-            }
-            
-            // Check nếu table body trống
-            int rowCount = getUserCount();
-            return rowCount == 0;
-        } catch (Exception e) {
-            logger.warn("⚠️ Error checking for no records: {}", e.getMessage());
-            return false;
-        }
+        // OrangeHRM demo không hiển thị "No Records Found" text
+        // Chỉ đơn giản trả về 0 rows
+        int rowCount = getUserCount();
+        boolean hasNoRecords = rowCount == 0;
+        logger.info(hasNoRecords ? "ℹ️ Không có kết quả tìm kiếm" : "ℹ️ Tìm thấy {} kết quả", rowCount);
+        return hasNoRecords;
     }
 }
